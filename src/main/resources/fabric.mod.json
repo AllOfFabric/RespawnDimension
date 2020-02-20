@@ -1,0 +1,29 @@
+{
+    "schemaVersion": 1,
+    "id": "respawn_dimension",
+    "name": "RespawnDimension",
+    "version": "$version",
+    "environment": "*",
+    "icon": "assets/respawn_dimension/icon.png",
+    "depends": {
+        "fabric-resource-loader-v0": "*"
+    },
+    "entrypoints": {
+        "main": [
+            "io.github.alloffabric.respawndimension.RespawnDimension"
+        ]
+    },
+    "authors": [
+        {
+            "name": "UpcraftLP",
+            "contact": {
+                "homepage": "https://twitter.com/UpcraftLP",
+                "twitter": "https://twitter.com/UpcraftLP"
+            }
+        }
+    ],
+    "description": "",
+    "mixins": [
+        "mixins.respawn_dimension.json"
+    ]
+}

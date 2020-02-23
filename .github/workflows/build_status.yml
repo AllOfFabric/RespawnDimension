@@ -2,8 +2,13 @@ name: Build Status
 
 on:
   push:
+    paths-ignore:
+      - '.github/**'
     tags-ignore:
       - '*.*'
+    branches:
+      - master
+
 
 jobs:
   build:

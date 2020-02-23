@@ -1,14 +1,20 @@
 package io.github.alloffabric.respawndimension.mixin;
 
 import io.github.alloffabric.respawndimension.ConfigHandler;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.stat.Stats;
 import net.minecraft.world.dimension.DimensionType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +23,7 @@ import java.util.UUID;
 @Mixin(PlayerManager.class)
 public class MixinPlayerManager {
 
+    @Shadow @Final private MinecraftServer server;
     /**
      * need this only so long as a player hasn't relogged after initially joining this world<br/>
      * yes, this is a hack, but gets around having to serialize data. might be changed in the future.
@@ -30,14 +37,11 @@ public class MixinPlayerManager {
         return ret || playerEntity.dimension != dimension; //we don't want the "your home bed was missing or obstructed" message when teleporting to another dimension
     }
 
-    @Redirect(method = "onPlayerConnect", at = @At(value = "FIELD", target = "Lnet/minecraft/server/network/ServerPlayerEntity;dimension:Lnet/minecraft/world/dimension/DimensionType;", ordinal = 0))
-    private DimensionType respawndimension_onPlayerConnect(ServerPlayerEntity player) {
-        if(player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.LEAVE_GAME)) > 0 || respawnedPlayers.contains(player.getUuid())) {
-            return player.dimension;
-        }
-        else {
+    @Inject(method = "onPlayerConnect", at = @At("RETURN"))
+    private void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
+        if(player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.LEAVE_GAME)) == 0 && !respawnedPlayers.contains(player.getUuid())) {
+            this.server.execute(() -> player.teleport(this.server.getWorld(ConfigHandler.getConfig().respawnDimension), player.getX(), player.getY(), player.getZ(), player.yaw, player.pitch));
             respawnedPlayers.add(player.getUuid());
-            return ConfigHandler.getConfig().respawnDimension;
         }
     }
 }
